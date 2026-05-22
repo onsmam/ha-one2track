@@ -36,6 +36,7 @@ class One2TrackEntity(CoordinatorEntity[One2TrackCoordinator]):
 
     _MODEL_NAMES: dict[int, str] = {
         27: "Connect MOVE",
+        28: "Connect Go",
         77: "Connect UP",
     }
 
@@ -44,10 +45,12 @@ class One2TrackEntity(CoordinatorEntity[One2TrackCoordinator]):
         """Return device info linking all entities to one HA device per watch."""
         data = self._data
         model_id = data.get("device_model_id")
+        config = data.get("config") or {}
         return DeviceInfo(
             identifiers={(DOMAIN, self._uuid)},
             serial_number=data.get("serial_number"),
             name=data.get("name", self._uuid),
             manufacturer="One2Track",
             model=self._MODEL_NAMES.get(model_id, f"Unknown ({model_id})") if model_id else None,
+            sw_version=config.get("VERSION"),
         )

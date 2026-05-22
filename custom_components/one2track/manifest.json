@@ -10,6 +10,6 @@
   "issue_tracker": "https://github.com/onsmam/ha-one2track/issues",
   "requirements": [],
   "ssdp": [],
-  "version": "1.0.18",
+  "version": "1.0.19",
   "zeroconf": []
 }
