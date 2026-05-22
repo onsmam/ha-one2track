@@ -36,6 +36,7 @@ class One2TrackEntity(CoordinatorEntity[One2TrackCoordinator]):
 
     _MODEL_NAMES: dict[int, str] = {
         27: "Connect MOVE",
+        28: "Connect Go",
         77: "Connect UP",
     }
 

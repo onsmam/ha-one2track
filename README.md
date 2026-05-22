@@ -1,6 +1,6 @@
 # One2Track — Home Assistant Integratie
 
-[![Version](https://img.shields.io/badge/version-1.0.18-blue)](https://github.com/onsmam/ha-one2track)
+[![Version](https://img.shields.io/badge/version-1.0.19-blue)](https://github.com/onsmam/ha-one2track)
 
 Custom Home Assistant integratie voor [One2Track](https://www.one2trackgps.com) GPS-horloges (kinder- en senioren-trackers).
 
@@ -139,6 +139,10 @@ Call the `one2track.get_raw_device_data` service to get raw data from all source
 The original integration was built by [@jurrienk](https://github.com/jurrienk) — all the hard work of reverse-engineering the One2Track portal, building the scraping layer, and creating the full service set is his.
 
 ### Changelog
+
+#### v1.0.19
+
+- **Feature:** Connect Go toegevoegd aan modelnamenregister (model_id 28)
 
 #### v1.0.18
 
