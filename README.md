@@ -143,6 +143,7 @@ The original integration was built by [@jurrienk](https://github.com/jurrienk) â
 #### v1.0.19
 
 - **Feature:** Connect Go toegevoegd aan modelnamenregister (model_id 28)
+- **Feature:** Firmwareversie van het horloge zichtbaar in HA-apparaatdetails (`sw_version`)
 
 #### v1.0.18
 
