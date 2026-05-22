@@ -87,6 +87,15 @@ def _sanitized_location_update(data: dict) -> datetime | None:
     return ts
 
 
+_OFFLINE_UNAVAILABLE_KEYS = frozenset({
+    "altitude",
+    "accuracy",
+    "satellite_count",
+    "signal_strength",
+    "speed",
+    "heading",
+})
+
 SENSOR_DESCRIPTIONS: tuple[One2TrackSensorDescription, ...] = (
     One2TrackSensorDescription(
         key="battery",
@@ -232,6 +241,15 @@ class One2TrackSensor(One2TrackEntity, SensorEntity):
         super().__init__(coordinator, uuid)
         self.entity_description = description
         self._attr_unique_id = f"{uuid}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return False for location sensors when the watch is offline."""
+        if not super().available:
+            return False
+        if self.entity_description.key in _OFFLINE_UNAVAILABLE_KEYS:
+            return str(self._data.get("status", "")).lower() != "offline"
+        return True
 
     @property
     def native_value(self) -> Any:
