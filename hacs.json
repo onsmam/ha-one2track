@@ -1,3 +1,5 @@
 {
-  "name": "One2Track Connector"
+  "name": "One2Track",
+  "render_readme": true,
+  "logo": "logo.png"
 }
