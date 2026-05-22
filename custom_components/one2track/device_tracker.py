@@ -43,6 +43,13 @@ class One2TrackDeviceTracker(One2TrackEntity, TrackerEntity):
         self._attr_unique_id = uuid
 
     @property
+    def available(self) -> bool:
+        """Return False when the watch is offline."""
+        if not super().available:
+            return False
+        return str(self._data.get("status", "")).lower() != "offline"
+
+    @property
     def source_type(self) -> str:
         """Return the source type."""
         return "gps"

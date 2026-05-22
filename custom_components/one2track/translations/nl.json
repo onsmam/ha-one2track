@@ -1,0 +1,98 @@
+{
+    "title": "One2Track GPS-trackers",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Inloggen op One2Track",
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord"
+                },
+                "description": "Vul uw One2Track-accountgegevens in."
+            }
+        },
+        "error": {
+            "auth": "Ongeldige gebruikersnaam of wachtwoord",
+            "connection": "Kan geen verbinding maken met One2Track",
+            "unknown": "Onverwachte fout"
+        },
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        }
+    },
+    "entity": {
+        "sensor": {
+            "battery": {
+                "name": "Batterij"
+            },
+            "sim_balance": {
+                "name": "SIM-tegoed"
+            },
+            "last_location_update": {
+                "name": "Laatste locatie-update"
+            },
+            "last_communication": {
+                "name": "Laatste communicatie"
+            },
+            "signal_strength": {
+                "name": "Signaalsterkte"
+            },
+            "satellite_count": {
+                "name": "Aantal satellieten"
+            },
+            "speed": {
+                "name": "Snelheid"
+            },
+            "altitude": {
+                "name": "Hoogte"
+            },
+            "steps_today": {
+                "name": "Stappen vandaag"
+            },
+            "accuracy": {
+                "name": "GPS-nauwkeurigheid"
+            },
+            "heading": {
+                "name": "Koers"
+            },
+            "status": {
+                "name": "Status"
+            },
+            "phonebook": {
+                "name": "Telefoonboek"
+            },
+            "whitelist": {
+                "name": "Whitelist"
+            }
+        },
+        "binary_sensor": {
+            "tumble": {
+                "name": "Val gedetecteerd"
+            }
+        },
+        "button": {
+            "refresh_location": {
+                "name": "Locatie vernieuwen"
+            },
+            "find_device": {
+                "name": "Horloge bellen"
+            },
+            "remote_shutdown": {
+                "name": "Horloge uitschakelen"
+            }
+        },
+        "switch": {
+            "step_counter": {
+                "name": "Stappenteller"
+            }
+        },
+        "select": {
+            "gps_interval": {
+                "name": "GPS-interval"
+            },
+            "profile_mode": {
+                "name": "Profielmodus"
+            }
+        }
+    }
+}
