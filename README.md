@@ -1,8 +1,10 @@
 # One2Track — Home Assistant Integratie
 
-[![Version](https://img.shields.io/badge/version-1.0.17-blue)](https://github.com/onsmam/ha-one2track)
+[![Version](https://img.shields.io/badge/version-1.0.18-blue)](https://github.com/onsmam/ha-one2track)
 
 Custom Home Assistant integratie voor [One2Track](https://www.one2trackgps.com) GPS-horloges (kinder- en senioren-trackers).
+
+> **Credits:** Het harde werk voor deze integratie is gedaan door [@jurrienk](https://github.com/jurrienk). Deze fork voegt extra functies toe.
 
 > **Taal / Language:** [English](#english) | [Nederlands](#nederlands)
 
@@ -67,6 +69,10 @@ Er is geen officiële One2Track API. Deze integratie communiceert met `www.one2t
 
 Roep de dienst `one2track.get_raw_device_data` aan om ruwe data van alle bronnen op te halen (JSON API, HTML-scraping, coördinator-status, ontdekte functies). Dit is onmisbaar voor het debuggen van dataproblemen.
 
+### Credits
+
+Het originele werk is gedaan door [@jurrienk](https://github.com/jurrienk) — hij heeft de One2Track-portal ontcijferd, de scraping-laag gebouwd en alle diensten geïmplementeerd. Deze fork voegt extra functionaliteit toe bovenop zijn werk.
+
 ---
 
 ## English
@@ -128,7 +134,18 @@ There is no official One2Track API. This integration communicates with `www.one2
 
 Call the `one2track.get_raw_device_data` service to get raw data from all sources (JSON API, HTML scraping, coordinator state, discovered capabilities). This is invaluable for debugging data issues.
 
+### Credits
+
+The original integration was built by [@jurrienk](https://github.com/jurrienk) — all the hard work of reverse-engineering the One2Track portal, building the scraping layer, and creating the full service set is his.
+
 ### Changelog
+
+#### v1.0.18
+
+- **Feature:** Location sensors (altitude, GPS accuracy, satellite count, signal strength, speed, heading) and device tracker now return `unavailable` when the watch is offline
+- **Feature:** Added Dutch translation (`nl.json`)
+- **Feature:** Added `brands/` folder for HA brands proxy API logo assets
+- **Docs:** Bilingual README (NL + EN), credits added, full changelog restored
 
 #### v1.0.17 (2026-03-21)
 
@@ -138,17 +155,52 @@ Call the `one2track.get_raw_device_data` service to get raw data from all source
 
 - **Fix:** Transient server errors (e.g. HTTP 503) during setup now raise `ConfigEntryNotReady` so Home Assistant automatically retries instead of marking the integration as permanently failed
 
+#### v1.0.13 (2026-03-16)
+
+- **Docs:** Added git workflow rules to CLAUDE.md
+
 #### v1.0.8 (2026-03-16)
 
 - **Fix:** Phonebook and whitelist attributes now always exposed on device tracker (empty list when no data, instead of missing)
 - **Improvement:** Device entries now include manufacturer ("One2Track") and model name from the portal
 
+#### v1.0.7 (2026-03-16)
+
+- **Fix:** Added missing `remote_shutdown` translation to `en.json`
+- **Housekeeping:** Added `__pycache__` and `.private/` to `.gitignore`
+
+#### v1.0.6 (2026-03-16)
+
+- **Docs:** Added test safety section — snapshot and restore device state
+
+#### v1.0.5 (2026-03-16)
+
+- **Improvement:** Select entities (GPS interval, profile mode) now appear in the Configuration section on the device page
+- **Fix:** Reverted step counter switch change that broke functionality — restored assumed state behavior
+
+#### v1.0.4 (2026-03-15)
+
+- **Feature:** Added remote shutdown button entity (disabled by default — must be manually enabled per device to prevent accidental use)
+
+#### v1.0.3 (2026-03-15)
+
+- **Fix:** `last_location_update` sensor now guards against corrupt device RTC timestamps (e.g. 10 years in the future). Falls back to server-stamped `created_at` with a warning log when the device-reported value is more than 24 hours in the future
+
+#### v1.0.2 (2026-03-15)
+
+- **Docs:** Aligned version numbers across all documentation
+
+#### v1.0.1 (2026-03-15)
+
+- **Docs:** Removed personal name references from documentation
+
 #### v1.0.0 (2026-03-15)
 
-- **Fix:** Alarm values synced from portal are now validated
-- **Fix:** `add_phonebook_contact` no longer raises a false error when the portal returns HTTP 500 on a successful write
-- **Fix:** All service validation errors now use `ServiceValidationError` for proper HA UI error display
+- **Fix:** Alarm values synced from portal are now validated — malformed values (e.g. JavaScript template fragments) are discarded and local state is preserved
+- **Fix:** `add_phonebook_contact` no longer raises a false error when the portal returns HTTP 500 on a successful write — local state is updated optimistically
+- **Fix:** All service validation errors now use `ServiceValidationError` for proper HA UI error display instead of raw 500 messages
 - **Fix:** `intercom` and `change_password` capability errors now show the device name and a clear message about Connect MOVE requirement
+- **Fix:** `alarms` and `quiet_times` attributes are always present on the device tracker (empty list `[]` when cleared, instead of disappearing)
 - **Improvement:** Heading sensor satellite_count comparison is now type-safe
 - **Improvement:** Whitelist full error message now suggests using `set_whitelist` as an alternative
 
