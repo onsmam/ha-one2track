@@ -240,7 +240,7 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                         synced_any = True
                         LOGGER.debug("Synced %d alarms for %s", len(valid_alarms), uuid)
                     elif values:
-                        LOGGER.warning(
+                        LOGGER.debug(
                             "Alarm values from portal for %s appear malformed "
                             "(got %r), keeping local state",
                             uuid, values,
