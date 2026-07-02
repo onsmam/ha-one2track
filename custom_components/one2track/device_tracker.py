@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.zone import async_active_zone
+from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.components.device_tracker.const import SourceType
 
-from .const import DOMAIN
 from .entity import One2TrackEntity
 
 if TYPE_CHECKING:
@@ -18,14 +17,14 @@ if TYPE_CHECKING:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: One2TrackConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up One2Track device trackers."""
     coordinator = entry.runtime_data.coordinator
     async_add_entities(
-        One2TrackDeviceTracker(coordinator, hass, device["uuid"])
+        One2TrackDeviceTracker(coordinator, device["uuid"])
         for device in coordinator.device_list
     )
 
@@ -36,10 +35,9 @@ class One2TrackDeviceTracker(One2TrackEntity, TrackerEntity):
     _attr_name = None
     _attr_icon = "mdi:watch-variant"
 
-    def __init__(self, coordinator, hass, uuid: str) -> None:
+    def __init__(self, coordinator, uuid: str) -> None:
         """Initialize the tracker."""
         super().__init__(coordinator, uuid)
-        self._hass = hass
         self._attr_unique_id = uuid
 
     @property
@@ -50,9 +48,9 @@ class One2TrackDeviceTracker(One2TrackEntity, TrackerEntity):
         return str(self._data.get("status", "")).lower() != "offline"
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type."""
-        return "gps"
+        return SourceType.GPS
 
     @property
     def latitude(self) -> float | None:
@@ -85,25 +83,6 @@ class One2TrackDeviceTracker(One2TrackEntity, TrackerEntity):
         return 10
 
     @property
-    def battery_level(self) -> int | None:
-        """Return battery level."""
-        return self._location.get("battery_percentage")
-
-    @property
-    def location_name(self) -> str | None:
-        """Return location name (zone or address)."""
-        try:
-            if self.latitude is not None and self.longitude is not None:
-                zone = async_active_zone(
-                    self._hass, self.latitude, self.longitude, self.location_accuracy
-                )
-                if zone:
-                    return zone.entity_id.removeprefix("zone.")
-        except Exception:
-            pass
-        return self._location.get("address")
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device-specific attributes."""
         data = self._data
@@ -126,7 +105,6 @@ class One2TrackDeviceTracker(One2TrackEntity, TrackerEntity):
             attrs["tariff_type"] = simcard.get("tariff_type")
             raw = simcard.get("balance_cents")
             attrs["balance_eur"] = round(float(raw) / 100, 2) if raw is not None else None
-        # Device settings (synced from portal on startup, updated by services)
         synced = self.coordinator.is_settings_synced(self._uuid)
         attrs["settings_synced"] = synced
         attrs["phonebook"] = self.coordinator.get_phonebook(self._uuid) or []
