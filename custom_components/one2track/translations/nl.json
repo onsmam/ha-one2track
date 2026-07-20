@@ -82,6 +82,9 @@
             }
         },
         "switch": {
+            "polling": {
+                "name": "Automatische updates"
+            },
             "step_counter": {
                 "name": "Stappenteller"
             }

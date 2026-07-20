@@ -10,8 +10,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import STEP_COUNTER_CODES
+from .coordinator import One2TrackCoordinator
 from .entity import One2TrackEntity
 
 if TYPE_CHECKING:
@@ -28,7 +31,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up One2Track setting switches based on discovered capabilities."""
     coordinator = entry.runtime_data.coordinator
-    entities: list[SwitchEntity] = []
+    entities: list[SwitchEntity] = [
+        One2TrackPollingSwitch(coordinator, entry.entry_id),
+    ]
 
     for device in coordinator.device_list:
         uuid = device["uuid"]
@@ -39,6 +44,40 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
+
+
+class One2TrackPollingSwitch(CoordinatorEntity[One2TrackCoordinator], SwitchEntity):
+    """Switch to pause/resume automatic polling of the One2Track portal.
+
+    Useful when GPS satellites are not working and frequent updates are
+    unnecessary. Polling resumes instantly when turned back on.
+    """
+
+    _attr_translation_key = "polling"
+    _attr_icon = "mdi:refresh-auto"
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: One2TrackCoordinator, entry_id: str) -> None:
+        """Initialize the polling switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}_polling"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True when automatic polling is active."""
+        return self.coordinator.polling_enabled
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable automatic polling and trigger an immediate refresh."""
+        self.coordinator.set_polling_enabled(True)
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Pause automatic polling."""
+        self.coordinator.set_polling_enabled(False)
+        self.async_write_ha_state()
 
 
 class One2TrackStepCounterSwitch(One2TrackEntity, SwitchEntity):

@@ -70,6 +70,8 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self._settings_synced: dict[str, bool] = {}
         # Persistent storage for settings across HA restarts
         self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        # Polling kill-switch — survives restarts via the store
+        self._polling_enabled: bool = True
 
     @property
     def device_list(self) -> list[dict[str, Any]]:
@@ -105,6 +107,19 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Return discovered options for a command on a device."""
         caps = self.get_capabilities(uuid)
         return caps.get("options", {}).get(cmd_code, [])
+
+    # ── Polling control ───────────────────────────────────────────────
+
+    @property
+    def polling_enabled(self) -> bool:
+        """Return True when automatic polling is active."""
+        return self._polling_enabled
+
+    def set_polling_enabled(self, enabled: bool) -> None:
+        """Enable or disable automatic polling and persist the choice."""
+        self._polling_enabled = enabled
+        self.hass.async_create_task(self._async_save_settings())
+        self.async_update_listeners()
 
     # ── Settings state (synced from portal, updated by services) ───
 
@@ -166,6 +181,7 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             "alarms": self._alarms,
             "quiet_times": self._quiet_times,
             "synced": self._settings_synced,
+            "polling_enabled": self._polling_enabled,
         })
 
     async def _async_load_settings(self) -> None:
@@ -178,6 +194,7 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self._alarms = data.get("alarms", {})
         self._quiet_times = data.get("quiet_times", {})
         self._settings_synced = data.get("synced", {})
+        self._polling_enabled = data.get("polling_enabled", True)
         LOGGER.debug("Loaded persisted settings for %d devices", len(self._settings_synced))
 
     # ── Portal readback (best-effort sync of current settings) ────────
@@ -360,6 +377,8 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         timestamps, simcard) and the HTML-scraped data (for richer fields).
         Even if HTML scraping fails, entities stay fresh via the JSON data.
         """
+        if not self._polling_enabled:
+            return self.data or {}
         try:
             async with asyncio.timeout(60):
                 # Refresh base device data from JSON API
