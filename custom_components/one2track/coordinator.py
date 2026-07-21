@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -34,6 +35,8 @@ if TYPE_CHECKING:
 
 STORAGE_VERSION = 1
 STORAGE_KEY = f"{DOMAIN}.settings"
+
+FULL_POLL_INTERVAL_SECONDS = 3600  # 60 minutes between full polls when polling is ON
 
 
 class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
@@ -70,6 +73,10 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self._settings_synced: dict[str, bool] = {}
         # Persistent storage for settings across HA restarts
         self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        # Polling control
+        self._polling_enabled: bool = True
+        # monotonic timestamp of last full poll (0.0 = never → forces full poll on first tick)
+        self._last_full_poll: float = 0.0
 
     @property
     def device_list(self) -> list[dict[str, Any]]:
@@ -105,6 +112,25 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Return discovered options for a command on a device."""
         caps = self.get_capabilities(uuid)
         return caps.get("options", {}).get(cmd_code, [])
+
+    # ── Polling control ───────────────────────────────────────────────
+
+    @property
+    def polling_enabled(self) -> bool:
+        """Return True when automatic polling is active."""
+        return self._polling_enabled
+
+    def set_polling_enabled(self, enabled: bool) -> None:
+        """Enable or disable full polling and persist the choice.
+
+        When enabling, reset the full-poll timer so the next 60-second tick
+        immediately triggers a full update instead of waiting up to 60 minutes.
+        """
+        self._polling_enabled = enabled
+        if enabled:
+            self._last_full_poll = 0.0
+        self.hass.async_create_task(self._async_save_settings())
+        self.async_update_listeners()
 
     # ── Settings state (synced from portal, updated by services) ───
 
@@ -166,6 +192,7 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             "alarms": self._alarms,
             "quiet_times": self._quiet_times,
             "synced": self._settings_synced,
+            "polling_enabled": self._polling_enabled,
         })
 
     async def _async_load_settings(self) -> None:
@@ -178,6 +205,7 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self._alarms = data.get("alarms", {})
         self._quiet_times = data.get("quiet_times", {})
         self._settings_synced = data.get("synced", {})
+        self._polling_enabled = data.get("polling_enabled", True)
         LOGGER.debug("Loaded persisted settings for %d devices", len(self._settings_synced))
 
     # ── Portal readback (best-effort sync of current settings) ────────
@@ -356,13 +384,13 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch device states from One2Track.
 
-        Refreshes both the JSON device list (for base data like battery,
-        timestamps, simcard) and the HTML-scraped data (for richer fields).
-        Even if HTML scraping fails, entities stay fresh via the JSON data.
+        Always refreshes the JSON device list (lightweight — gives online/offline
+        status). HTML scraping (GPS, location details) is only done when polling
+        is enabled AND at most once per FULL_POLL_INTERVAL_SECONDS (60 minutes).
         """
         try:
             async with asyncio.timeout(60):
-                # Refresh base device data from JSON API
+                # Always refresh base data — lightweight, gives online/offline status
                 try:
                     self._device_list = await self.client.async_discover_devices()
                 except One2TrackApiClientAuthenticationError:
@@ -370,7 +398,16 @@ class One2TrackCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 except One2TrackApiClientError:
                     LOGGER.debug("JSON device refresh failed, keeping cached list")
 
-                # Scrape HTML for additional detail per device
+                if not self._polling_enabled:
+                    # Status-only mode: skip HTML scraping entirely
+                    return self.data or {}
+
+                # Full-poll mode: throttle HTML scraping to once per 60 minutes
+                now = time.monotonic()
+                if now - self._last_full_poll < FULL_POLL_INTERVAL_SECONDS:
+                    return self.data or {}
+
+                self._last_full_poll = now
                 return await self.client.async_get_all_device_states()
         except One2TrackApiClientAuthenticationError as exc:
             raise ConfigEntryAuthFailed(exc) from exc

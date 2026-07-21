@@ -82,6 +82,9 @@
             }
         },
         "switch": {
+            "polling": {
+                "name": "Volledig pollen"
+            },
             "step_counter": {
                 "name": "Stappenteller"
             }
