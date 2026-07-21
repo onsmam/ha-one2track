@@ -142,7 +142,7 @@ The original integration was built by [@jurrienk](https://github.com/jurrienk) �
 
 #### v1.0.21
 
-- **Feature:** Schakelaar "Automatische updates" toegevoegd — zet polling aan of uit zonder HA te herstarten; instelling blijft bewaard na herstart; polling hervat direct bij inschakelen
+- **Feature:** Schakelaar "Volledig pollen" toegevoegd — **Uit**: alleen JSON status-check elke 60 seconden (weet of horloge online is, geen GPS-data); **Aan**: volledige poll (JSON + HTML-scraping) eens per 60 minuten, direct een volle refresh bij inschakelen; instelling blijft bewaard na herstart
 
 #### v1.0.20
 

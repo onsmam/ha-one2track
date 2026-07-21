@@ -47,10 +47,12 @@ async def async_setup_entry(
 
 
 class One2TrackPollingSwitch(CoordinatorEntity[One2TrackCoordinator], SwitchEntity):
-    """Switch to pause/resume automatic polling of the One2Track portal.
+    """Switch to control polling behaviour.
 
-    Useful when GPS satellites are not working and frequent updates are
-    unnecessary. Polling resumes instantly when turned back on.
+    OFF → status-only mode: JSON device list refreshed every 60 s (shows
+    online/offline), HTML scraping skipped entirely (no GPS/location updates).
+    ON  → full-poll mode: JSON + HTML scraping every 60 minutes; toggling on
+    triggers an immediate full refresh so data is current straight away.
     """
 
     _attr_translation_key = "polling"
@@ -69,13 +71,13 @@ class One2TrackPollingSwitch(CoordinatorEntity[One2TrackCoordinator], SwitchEnti
         return self.coordinator.polling_enabled
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable automatic polling and trigger an immediate refresh."""
-        self.coordinator.set_polling_enabled(True)
+        """Switch to full-poll mode and trigger an immediate full refresh."""
+        self.coordinator.set_polling_enabled(True)  # also resets full-poll timer
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Pause automatic polling."""
+        """Switch to status-only mode (JSON check every 60 s, no HTML scraping)."""
         self.coordinator.set_polling_enabled(False)
         self.async_write_ha_state()
 

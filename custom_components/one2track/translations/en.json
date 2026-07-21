@@ -83,7 +83,7 @@
         },
         "switch": {
             "polling": {
-                "name": "Automatic updates"
+                "name": "Full polling"
             },
             "step_counter": {
                 "name": "Step counter"

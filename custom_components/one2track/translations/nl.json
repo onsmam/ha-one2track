@@ -83,7 +83,7 @@
         },
         "switch": {
             "polling": {
-                "name": "Automatische updates"
+                "name": "Volledig pollen"
             },
             "step_counter": {
                 "name": "Stappenteller"
